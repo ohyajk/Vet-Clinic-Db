@@ -10,10 +10,10 @@ SELECT * from animals WHERE name != 'Gabumon';
 SELECT * from animals WHERE weight_kg BETWEEN 10.4 AND 17.3;
 
 
-/* Setting the species column to unspecified */
+-- setting the species column to unspecified
+BEGIN; -- start transaction
 
--- start a transaction
-BEGIN TRANSACTION;
+UPDATE animals SET species = 'unspecified';
 
 -- Verify that change was made
 SELECT * FROM animals;
@@ -21,62 +21,51 @@ SELECT * FROM animals;
 -- Then roll back the change
 ROLLBACK;
 
--- Verify that species columns went back to the state before transaction.
+-- verify that species columns went back to the state before transaction.
 SELECT * FROM animals;
 
 /* Adding animal species*/
 
--- Start transaction
-BEGIN TRANSACTION;
+BEGIN; -- start transaction
 
--- Setting the species column to digimon for all animals that have a name ending in mon.
+-- setting the species column to digimon for all animals that have a name ending in mon.
 UPDATE animals SET species = 'digimon' WHERE name LIKE '%mon';
 
--- Setting the species column to pokemon for all animals that don't have species already set.
+-- setting the species column to pokemon for all animals that don't have species already set.
 Update animals SET species = 'pokemon' WHERE species IS NULL;
 
---Commit the transaction.
-COMMIT;
+COMMIT; --Commit the transaction.
 
 -- Verify that change was made and persists after commit.
 SELECT * FROM animals;
 
-/* Deleting all records*/
+/* Deleting all animal*/
+BEGIN;
 
--- Start transaction
-BEGIN TRANSACTION;
-
--- Deletre all records
 DELETE FROM animals;
 
--- Then roll back the change
-ROLLBACK;
-
--- Verify the result
+-- verify that the animals have been deleted
 SELECT * FROM animals;
 
-/* Savepoint */
+ROLLBACK;
 
--- Start transaction
-BEGIN TRANSACTION;
+-- very that table content are present
+SELECT * FROM animals;
 
--- Delete animals born after 1 jan 2022
-DELETE FROM animals WHERE date_of_birth > '2022-01-01';
+-- savepoint
+BEGIN;
 
--- Making savepoint
+DELETE FROM animals WHERE date_of_birth > '2020-01-01';
+
 SAVEPOINT s1;
 
--- updating the weight 
 UPDATE animals SET weight_kg = weight_kg * -1;
 
--- Rollback to savepoint
 ROLLBACK TO s1;
 
--- updating the weight 
 UPDATE animals SET weight_kg = weight_kg * -1 WHERE weight_kg < 0;
 
--- Commit changes
-COMMIT
+COMMIT;
 
 -- How many animals are there?
 SELECT COUNT(*) FROM animals;
@@ -96,3 +85,29 @@ SELECT species, MIN(weight_kg), MAX(weight_kg) FROM animals GROUP BY species;
 -- What is the average number of escape attempts per animal type of those born between 1990 and 2000?
 SELECT species, AVG(escape_attempts) FROM animals WHERE date_of_birth 
 BETWEEN '1990-01-01' AND '2000-12-31' GROUP BY species;
+
+/*Write queries (using JOIN) to answer the following questions*/
+
+-- What animals belong to Melody Pond?
+SELECT * FROM animals a INNER JOIN owners o ON a.owner_id = o.id WHERE o.full_name = 'Melody Pond';
+
+-- List of all animals that are pokemon (their type is Pokemon)
+SELECT * FROM animals a INNER JOIN species s ON a.species_id = s.id WHERE s.name = 'Pokemon';
+
+-- List all owners and their animals, remember to include those that don't own any animal.
+SELECT * FROM owners o FULL OUTER JOIN animals a ON o.id = a.owner_id;
+
+-- How many animals are there per species?
+SELECT s.name, COUNT(*) FROM species s LEFT JOIN animals a ON s.id =  a.species_id GROUP BY s.name;
+
+-- List all Digimon owned by Jennifer Orwell.
+SELECT * FROM animals a INNER JOIN owners o ON a.owner_id = o.id WHERE o.full_name = 'Jennifer Orwell' 
+  AND a.species_id = (SELECT id from species WHERE name = 'Digimon');
+
+-- List all animals owned by Dean Winchester that haven't tried to escape.
+SELECT * FROM animals a INNER JOIN owners o ON a.owner_id = o.id WHERE o.full_name = 'Dean Winchester' 
+AND a.escape_attempts <= 0;
+
+-- Who owns the most animals?
+SELECT o.full_name, COUNT(*) FROM owners o LEFT JOIN animals a ON o.id =  a.owner_id GROUP BY o.full_name
+ORDER BY COUNT DESC LIMIT 1;
