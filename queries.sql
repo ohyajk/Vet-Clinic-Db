@@ -9,6 +9,7 @@ SELECT * from animals WHERE neutered = TRUE;
 SELECT * from animals WHERE name != 'Gabumon';
 SELECT * from animals WHERE weight_kg BETWEEN 10.4 AND 17.3;
 
+
 /* Setting the species column to unspecified */
 
 -- start a transaction
