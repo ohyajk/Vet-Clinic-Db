@@ -1,45 +1,43 @@
 /* Database schema to keep the structure of entire database. */
 
-CREATE DATABASE vet_clinic;
-CREATE TABLE animals (
-    id SERIAL PRIMARY KEY,
-    name varchar(100) Not NULL,
-    date_of_birth DATE NOT NULL,
-    escape_attempts INT,
-    neutered BOOLEAN,
-    weight_kg DECIMAL(10,2));
-
--- ADD species column in animals table 
-ALTER TABLE animals
-ADD species VARCHAR(50);
-
--- Create a table named owners
-CREATE TABLE owners (
-    id BIGSERIAL PRIMARY KEY NOT NULL,
-    full_name VARCHAR(100),
-    age INT
-
+CREATE TABLE animals(
+    id INT PRIMARY KEY, 
+    name  VARCHAR, 
+    date_of_birth DATE, 
+    escape_attempts INT, 
+    neutered BOOLEAN, 
+    weight_kg Decimal
 );
 
--- Create a table named species
-CREATE TABLE species (
-    id BIGSERIAL PRIMARY KEY NOT NULL,
-    name VARCHAR(100)
+ALTER TABLE animals ADD species VARCHAR;
+ALTER TABLE animals DROP column species;
+ALTER TABLE animals ADD PRIMARY KEY(id);
+ALTER TABLE animals ADD species_id INT;
+ALTER TABLE animals ADD owner_id INT;
+ALTER TABLE animals ADD FOREIGN KEY (species_id) REFERENCES species(id);
+ALTER TABLE animals ADD FOREIGN KEY (owner_id) REFERENCES owners(id);
+
+CREATE TABLE owners(id INT GENERATED ALWAYS AS IDENTITY, full_name VARCHAR, age INT);
+ALTER TABLE owners ADD PRIMARY KEY(id);
+
+CREATE TABLE species(id INT GENERATED ALWAYS AS IDENTITY, name VARCHAR);
+ALTER TABLE species ADD PRIMARY KEY(id);
+
+CREATE TABLE vets (
+id INT GENERATED ALWAYS AS IDENTITY,
+name VARCHAR,
+age INT,
+date_of_graduation DATE);
+
+ALTER TABLE vets ADD PRIMARY KEY(id);
+
+create table specializations (
+    vet_id int references vets(id),
+    species_id int references species(id)
 );
 
--- Remove column species
-ALTER TABLE animals DROP species;
-
--- Add column species_id which is a foreign key referencing species table
-ALTER TABLE animals 
- ADD species_id INT, 
- ADD CONSTRAINT fk_species 
- FOREIGN KEY (species_id) 
- REFERENCES species (id);
-
- -- Add column owner_id which is a foreign key referencing the owners table
- ALTER TABLE animals 
-  ADD owner_id,
-  ADD CONSTRAINT fk_owners
-  FOREIGN KEY (owner_id) 
-  REFERENCES owners (id);
+create table visits (
+vet_id int references vets(id),
+animals_id int references animals(id),
+date_of_visit date
+);
