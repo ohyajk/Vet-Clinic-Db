@@ -8,5 +8,4 @@ create table animals (
     neutered boolean, 
     weight_kg decimal
 );
-
 alter table animals add column species text;
